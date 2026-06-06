@@ -41,14 +41,14 @@ def answer_question(question: str):
             "• Services\n"
             "• Contact\n"
             "• Location"
-        )
+        ), []
         
     # Handle thanks and bye
     if re.match(r'^(thanks|thank\s*you|thx)$', q_clean):
-        return "You're welcome! Let me know if you need anything else. 😊"
+        return "You're welcome! Let me know if you need anything else. 😊", []
         
     if re.match(r'^(bye|goodbye|see\s*you)$', q_clean):
-        return "Goodbye! Have a great day! 👋"
+        return "Goodbye! Have a great day! 👋", []
 
     contexts = retrieve_context(
         question,
@@ -60,16 +60,18 @@ def answer_question(question: str):
             "I couldn't find that "
             "information in the "
             "knowledge base."
-        )
+        ), []
 
     # 1. Retrieved chunks from Qdrant
     print("\n" + "="*50)
     print("DEBUG - 1. Retrieved chunks from Qdrant:")
     for idx, chunk in enumerate(contexts):
-        print(f"--- Chunk {idx + 1} ---\n{chunk}\n")
+        print(f"--- Chunk {idx + 1} ---\n{chunk['text']}\n")
 
     # Combine the top matching chunks
-    context_text = "\n\n".join(contexts)
+    context_text = "\n\n".join([c["text"] for c in contexts])
+    
+    unique_sources = [{"source": src} for src in list(set([c["source"] for c in contexts if c["source"] and c["source"] != "unknown"]))]
 
     # 2. Raw context sent to Gemini
     print("DEBUG - 2. Raw context sent to Gemini:")
@@ -94,7 +96,7 @@ ANSWER:
     print(f"{prompt}\n")
 
     if not llm:
-        return "Error: GOOGLE_API_KEY is not set. Please check your .env configuration."
+        return "Error: GOOGLE_API_KEY is not set. Please check your .env configuration.", []
 
     try:
 
@@ -109,18 +111,18 @@ ANSWER:
             return (
                 "I couldn't generate "
                 "an answer."
-            )
+            ), []
 
-        return response.content.strip()
+        return response.content.strip(), unique_sources
 
     except Exception as e:
         error_msg = str(e).lower()
         if "429" in error_msg or "quota" in error_msg or "rate limit" in error_msg or "exhausted" in error_msg:
-            return "Error: Gemini API rate limit exceeded. Please try again later."
+            return "Error: Gemini API rate limit exceeded. Please try again later.", []
         elif "api_key" in error_msg or "api key" in error_msg or "unauthenticated" in error_msg:
-            return "Error: Invalid or missing Google API key."
+            return "Error: Invalid or missing Google API key.", []
         else:
-            return f"Gemini API failure: {str(e)}"
+            return f"Gemini API failure: {str(e)}", []
 
 
 def main():
@@ -146,7 +148,7 @@ def main():
             print("\nGoodbye!")
             break
 
-        answer = answer_question(
+        answer, sources = answer_question(
             question
         )
 

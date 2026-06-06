@@ -10,3 +10,4 @@ langchain-google-genai
 python-dotenv
 beautifulsoup4
 lxml
+pymongo

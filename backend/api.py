@@ -1,8 +1,26 @@
+import os
+import uuid
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+from pymongo import MongoClient
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.rag import answer_question
+
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+try:
+    if MONGO_URI:
+        mongo_client = MongoClient(MONGO_URI)
+        mongo_db = mongo_client["chat_logs_db"]
+        chat_logs_collection = mongo_db["CoreBotChatLogs"]
+except Exception as e:
+    print(f"Failed to connect to MongoDB: {e}")
+
 
 app = FastAPI()
 
@@ -30,12 +48,27 @@ class IndexRequest(BaseModel):
 @app.post("/chat")
 def chat(query: Query):
 
-    answer = answer_question(
+    if not query.session_id:
+        query.session_id = str(uuid.uuid4())
+
+    answer, sources = answer_question(
         query.question
     )
 
+    try:
+        chat_logs_collection.insert_one({
+            "session_id": query.session_id,
+            "question": query.question,
+            "answer": answer,
+            "timestamp": datetime.now(timezone.utc),
+            "sources": sources
+        })
+    except Exception as e:
+        print(f"Failed to log chat to MongoDB: {e}")
+
     return {
-        "answer": answer
+        "answer": answer,
+        "session_id": query.session_id
     }
 
 

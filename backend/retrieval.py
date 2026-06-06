@@ -9,11 +9,15 @@ from backend.embedding import get_embedding
 
 COLLECTION_NAME = "novoxcore"
 
-client = QdrantClient(
-    path="qdrant_db"
-)
-
 MIN_SCORE = 0.40
+
+_client = None
+
+def get_client():
+    global _client
+    if _client is None:
+        _client = QdrantClient(path="qdrant_db")
+    return _client
 
 
 def retrieve_context(
@@ -45,6 +49,7 @@ def retrieve_context(
 
     query_vector = get_embedding(query)
 
+    client = get_client()
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=query_vector,
@@ -80,6 +85,9 @@ def retrieve_context(
         print(f"Preview: {chunk_text[:100].replace(chr(10), ' ')}...\n")
 
         if r.score >= MIN_SCORE:
-            contexts.append(chunk_text)
+            contexts.append({
+                "text": chunk_text,
+                "source": source_url
+            })
 
     return contexts
