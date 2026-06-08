@@ -95,9 +95,7 @@ def main():
 
         except Exception as e:
 
-            print(
-                f"\nError: {str(e)}"
-            )
+            print("\nError: An unexpected error occurred. Check your configuration.")
 
 
 if __name__ == "__main__":

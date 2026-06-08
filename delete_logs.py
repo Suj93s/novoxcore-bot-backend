@@ -9,12 +9,15 @@ def delete_logs():
         print("MONGO_URI not found!")
         return
 
-    client = MongoClient(MONGO_URI)
-    db = client["chat_logs_db"]
-    collection = db["CoreBotChatLogs"]
+    try:
+        client = MongoClient(MONGO_URI)
+        db = client["chat_logs_db"]
+        collection = db["CoreBotChatLogs"]
 
-    result = collection.delete_many({})
-    print(f"Successfully deleted {result.deleted_count} logs from CoreBotChatLogs.")
+        result = collection.delete_many({})
+        print(f"Successfully deleted {result.deleted_count} logs from CoreBotChatLogs.")
+    except Exception:
+        print("Failed to delete logs. Check your database connection configuration.")
 
 if __name__ == "__main__":
     delete_logs()
