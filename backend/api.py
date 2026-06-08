@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,7 @@ try:
         mongo_db = mongo_client["chat_logs_db"]
         chat_logs_collection = mongo_db["CoreBotChatLogs"]
 except Exception as e:
-    print(f"Failed to connect to MongoDB: {e}")
+    print("Failed to connect to MongoDB. Check your credentials and configuration.")
 
 
 app = FastAPI()
@@ -27,7 +28,15 @@ app = FastAPI()
 # Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development
+    allow_origins=[
+        "https://novoxcore.com",
+        "https://www.novoxcore.com",
+        "http://localhost:3000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,8 +45,8 @@ app.add_middleware(
 
 class Query(BaseModel):
     question: str
-    tenant: str = None
-    session_id: str = None
+    tenant: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 class IndexRequest(BaseModel):

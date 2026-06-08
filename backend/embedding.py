@@ -24,7 +24,7 @@ def get_embedding(text: str):
         if "429" in error_msg or "quota" in error_msg or "rate limit" in error_msg or "exhausted" in error_msg:
             raise RuntimeError("Gemini API rate limit exceeded.") from e
         else:
-            raise RuntimeError(f"Gemini API failure: {str(e)}") from e
+            raise RuntimeError("Gemini API failure: An unexpected error occurred.") from e
 
 def get_embeddings(texts: list[str]):
     if not embeddings:
@@ -45,5 +45,5 @@ def get_embeddings(texts: list[str]):
             if "429" in error_msg or "quota" in error_msg or "rate limit" in error_msg or "exhausted" in error_msg:
                 raise RuntimeError("Gemini API rate limit exceeded.") from e
             else:
-                raise RuntimeError(f"Gemini API failure: {str(e)}") from e
+                raise RuntimeError("Gemini API failure: An unexpected error occurred.") from e
     return results

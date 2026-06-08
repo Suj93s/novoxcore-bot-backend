@@ -122,7 +122,7 @@ ANSWER:
         elif "api_key" in error_msg or "api key" in error_msg or "unauthenticated" in error_msg:
             return "Error: Invalid or missing Google API key.", []
         else:
-            return f"Gemini API failure: {str(e)}", []
+            return "Gemini API failure: An unexpected error occurred.", []
 
 
 def main():
